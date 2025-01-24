@@ -21,17 +21,17 @@ namespace ApiPdfImageReader.Controllers
             {
                 return BadRequest(new { message = "No se proporcionó ningún archivo o está vacío." });
             }
-
+            //Verifica si es PDF
             if (IsPdf(file))
             {
                 return await ExtraePDF(file);
             }
-
+            //Verifica si es Imagen
             if (IsImage(file))
             {
                 return await ExtraeImagen(file);
             }
-
+            //Si no es ninguna de las dos anteriores devuelve bad request
             return BadRequest(new { message = "El archivo no es de formato PDF o Imagen." });
         }
 
@@ -42,7 +42,7 @@ namespace ApiPdfImageReader.Controllers
                 // Guarda el archivo en un Stream temporal
                 using var memoryStream = new MemoryStream();
                 await file.CopyToAsync(memoryStream);
-                memoryStream.Position = 0; // Asegúrate de que el Stream esté al principio
+                memoryStream.Position = 0;
 
                 // Extrae el texto del PDF usando iText7
                 var extractedText = ExtractTextFromPdf(memoryStream);
@@ -69,9 +69,10 @@ namespace ApiPdfImageReader.Controllers
                 using var memoryStream = new MemoryStream();
                 await file.CopyToAsync(memoryStream);
 
+                //Selecciona la ruta para utilizar la config Tesseract
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "Tesseract", "tessdata");
-
                 var engine = new TesseractEngine(path, "eng");
+                //Extrae el texto de la imagen
                 var image = Pix.LoadFromMemory(memoryStream.ToArray());
                 var page = engine.Process(image);
 
@@ -91,8 +92,6 @@ namespace ApiPdfImageReader.Controllers
             }
         }
 
-
-        // Método auxiliar para extraer texto de un PDF usando iText7
         private static string ExtractTextFromPdf(Stream pdfStream)
         {
             using var pdfReader = new PdfReader(pdfStream);
@@ -117,8 +116,7 @@ namespace ApiPdfImageReader.Controllers
             var extension = Path.GetExtension(file.FileName).ToLower();
             return allowedImageExtensions.Contains(extension);
         }
-
-        // Método para verificar si es un PDF
+        
         private bool IsPdf(IFormFile file)
         {
             var allowedPdfExtensions = new[] { ".pdf" };
